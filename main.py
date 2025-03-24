@@ -12,13 +12,13 @@ logging.info("Starter CEJ bolig-tjek...")
 
 FROM_EMAIL = os.environ.get("FROM_EMAIL")
 FROM_PASSWORD = os.environ.get("FROM_PASSWORD")
-TO_EMAIL = os.environ.get("TO_EMAIL")
+TO_EMAIL = os.environ.get("TO_EMAIL") + ", dortheskovgaard@dadlnet.dk, dskovgaard@hotmail.com"
 
 if not FROM_EMAIL or not FROM_PASSWORD or not TO_EMAIL:
     logging.error("❌ En eller flere environment-variabler mangler!")
     exit(1)
 
-URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-50000&p=sj%C3%A6lland"
+URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-8000&p=sj%C3%A6lland%2Ck%C3%B8benhavn&types=apartment"
 PREVIOUS_FILE = "previous.txt"
 
 def get_previous_lines():
@@ -33,7 +33,7 @@ def save_current_lines(lines):
         f.write("\n".join(lines))
 
 def send_sms(message_body):
-    logging.info("🔔 Sender SMS...")
+    logging.info("🔔 Sender besked...")
     msg = MIMEText(message_body)
     msg["Subject"] = "Ny CEJ-lejlighed(er)!"
     msg["From"] = FROM_EMAIL
@@ -42,7 +42,7 @@ def send_sms(message_body):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(FROM_EMAIL, FROM_PASSWORD)
         server.send_message(msg)
-    logging.info("✅ SMS sendt!")
+    logging.info("✅ Besked sendt til mobil og e-mail!")
 
 def check_site():
     logging.info("🔍 Tjekker CEJ-siden...")
@@ -63,7 +63,7 @@ def check_site():
             elif line.startswith("- ") and not line.startswith("---"):
                 changes.append(f"- {line[2:]}")
         if changes:
-            body = "\n".join(changes[:10])  # max 10 linjer i SMS
+            body = "\n".join(changes[:10])  # max 10 linjer i besked
             logging.info("🚨 Ændringer fundet:\n" + body)
             send_sms(body)
     else:
