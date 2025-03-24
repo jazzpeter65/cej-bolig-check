@@ -47,7 +47,8 @@ def send_sms(message_body):
 
 def check_site():
     logging.info("🔍 Tjekker CEJ-siden...")
-    response = requests.get(URL)
+    headers = {"User-Agent": "Mozilla/5.0"}  # 🛡️ Undgår blokering
+    response = requests.get(URL, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
 
     listings = soup.find_all("div", class_="property-list__item")
