@@ -3,58 +3,71 @@ from bs4 import BeautifulSoup
 import smtplib
 from email.mime.text import MIMEText
 import os
+import logging
+import difflib
 
-print("Starter CEJ bolig-tjek...", flush=True)
+logging.basicConfig(level=logging.INFO, format='%(message)s')
+
+logging.info("Starter CEJ bolig-tjek...")
 
 FROM_EMAIL = os.environ.get("FROM_EMAIL")
 FROM_PASSWORD = os.environ.get("FROM_PASSWORD")
 TO_EMAIL = os.environ.get("TO_EMAIL")
 
 if not FROM_EMAIL or not FROM_PASSWORD or not TO_EMAIL:
-    print("❌ En eller flere environment-variabler mangler!", flush=True)
+    logging.error("❌ En eller flere environment-variabler mangler!")
     exit(1)
 
-URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-50000&p=sj%C3%A6lland%2Ck%C3%B8benhavn&types=apartment"
+URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-8000&p=sj%C3%A6lland%2Ck%C3%B8benhavn&types=apartment"
 PREVIOUS_FILE = "previous.txt"
 
-def get_previous():
+def get_previous_lines():
     try:
         with open(PREVIOUS_FILE, "r") as f:
-            return f.read()
+            return f.read().splitlines()
     except FileNotFoundError:
-        return ""
+        return []
 
-def save_current(content):
+def save_current_lines(lines):
     with open(PREVIOUS_FILE, "w") as f:
-        f.write(content)
+        f.write("\n".join(lines))
 
 def send_sms(message_body):
-    print("🔔 Sender SMS...", flush=True)
+    logging.info("🔔 Sender SMS...")
     msg = MIMEText(message_body)
-    msg["Subject"] = "Ny CEJ-lejlighed!"
+    msg["Subject"] = "Ny CEJ-lejlighed(er)!"
     msg["From"] = FROM_EMAIL
     msg["To"] = TO_EMAIL
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(FROM_EMAIL, FROM_PASSWORD)
         server.send_message(msg)
-    print("✅ SMS sendt!", flush=True)
+    logging.info("✅ SMS sendt!")
 
 def check_site():
-    print("🔍 Tjekker CEJ-siden...", flush=True)
+    logging.info("🔍 Tjekker CEJ-siden...")
     response = requests.get(URL)
     soup = BeautifulSoup(response.text, "html.parser")
 
     listings = soup.find_all("div", class_="property-list__item")
-    current = "\n".join([item.get_text(strip=True) for item in listings])
-    previous = get_previous()
+    current_lines = [item.get_text(strip=True) for item in listings]
+    previous_lines = get_previous_lines()
 
-    print(f"📦 Fundet {len(listings)} opslag.", flush=True)
-    if current != previous and previous != "":
-        print("🚨 Ændring fundet – sender SMS!", flush=True)
-        send_sms("Ny bolig under 8000 kr – tjek CEJ nu!")
+    logging.info(f"📦 Fundet {len(current_lines)} opslag.")
+    if current_lines != previous_lines and previous_lines:
+        diff = list(difflib.unified_diff(previous_lines, current_lines, lineterm=''))
+        changes = []
+        for line in diff:
+            if line.startswith("+ ") and not line.startswith("+++"):
+                changes.append(f"+ {line[2:]}")
+            elif line.startswith("- ") and not line.startswith("---"):
+                changes.append(f"- {line[2:]}")
+        if changes:
+            body = "\n".join(changes[:10])  # max 10 linjer i SMS
+            logging.info("🚨 Ændringer fundet:\n" + body)
+            send_sms(body)
     else:
-        print("✅ Ingen ændringer.", flush=True)
-    save_current(current)
+        logging.info("✅ Ingen ændringer.")
+    save_current_lines(current_lines)
 
 check_site()
