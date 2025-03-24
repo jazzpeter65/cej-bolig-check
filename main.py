@@ -1,45 +1,60 @@
 import requests
 from bs4 import BeautifulSoup
-import time
 import smtplib
 from email.mime.text import MIMEText
+import os
 
-TO_EMAIL = "30753602@sms.telenor.dk"
-FROM_EMAIL = "jazzpeter65@gmail.com"
-FROM_PASSWORD = "hrtp ewvo lgro fxbn"
+print("Starter CEJ bolig-tjek...")
 
-URL = "https://udlejning.cej.dk/find-bolig/overblik?p=sj%C3%A6lland"
+FROM_EMAIL = os.environ.get("FROM_EMAIL")
+FROM_PASSWORD = os.environ.get("FROM_PASSWORD")
+TO_EMAIL = os.environ.get("TO_EMAIL")
 
-previous = ""
+if not FROM_EMAIL or not FROM_PASSWORD or not TO_EMAIL:
+    print("❌ En eller flere environment-variabler mangler!")
+    exit(1)
+
+URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-8000&p=sj%C3%A6lland%2Ck%C3%B8benhavn&types=apartment"
+PREVIOUS_FILE = "previous.txt"
+
+def get_previous():
+    try:
+        with open(PREVIOUS_FILE, "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return ""
+
+def save_current(content):
+    with open(PREVIOUS_FILE, "w") as f:
+        f.write(content)
 
 def send_sms(message_body):
+    print("🔔 Sender SMS...")
     msg = MIMEText(message_body)
-    msg['Subject'] = "Ny CEJ-lejlighed tilbydes!"
-    msg['From'] = FROM_EMAIL
-    msg['To'] = TO_EMAIL
+    msg["Subject"] = "Ny CEJ-lejlighed!"
+    msg["From"] = FROM_EMAIL
+    msg["To"] = TO_EMAIL
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(FROM_EMAIL, FROM_PASSWORD)
         server.send_message(msg)
+    print("✅ SMS sendt!")
 
-while True:
-    try:
-        print("Checker siden...")
-        response = requests.get(URL)
-        soup = BeautifulSoup(response.text, 'html.parser')
+def check_site():
+    print("🔍 Tjekker CEJ-siden...")
+    response = requests.get(URL)
+    soup = BeautifulSoup(response.text, "html.parser")
 
-        listings = soup.find_all("div", class_="property-list__item")
-        current = "\n".join([item.get_text(strip=True) for item in listings])
+    listings = soup.find_all("div", class_="property-list__item")
+    current = "\n".join([item.get_text(strip=True) for item in listings])
+    previous = get_previous()
 
-        if current != previous and previous != "":
-            print("Ny bolig fundet – sender SMS!")
-            send_sms("Ny bolig på CEJ – check siden nu!")
-        else:
-            print("Ingen ændringer.")
+    print(f"📦 Fundet {len(listings)} opslag.")
+    if current != previous and previous != "":
+        print("🚨 Ændring fundet – sender SMS!")
+        send_sms("Ny bolig under 8000 kr – tjek CEJ nu!")
+    else:
+        print("✅ Ingen ændringer.")
+    save_current(current)
 
-        previous = current
-        time.sleep(60)
-
-    except Exception as e:
-        print("Fejl:", e)
-        time.sleep(60)
+check_site()
