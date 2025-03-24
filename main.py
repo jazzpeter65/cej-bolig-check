@@ -44,9 +44,20 @@ def send_email(message_body):
     logging.info("✅ Besked sendt til mobil og e-mail!")
 
 def fetch_listings():
-    response = requests.get(API_URL)
-    data = response.json()
-    listings = data.get("items", [])
+    headers = {"User-Agent": "Mozilla/5.0"}  # ← vigtig for CEJ-serveren
+    response = requests.get(API_URL, headers=headers)
+
+    logging.info(f"🌐 Statuskode: {response.status_code}")
+    logging.info("📄 Rå JSON-udsnit (første 1000 tegn):")
+    logging.info(response.text[:1000])
+
+    try:
+        data = response.json()
+        listings = data.get("items", [])
+    except Exception as e:
+        logging.error(f"❌ Fejl ved JSON-afkodning: {e}")
+        listings = []
+
     lines = []
     for item in listings:
         address = item.get("address", {}).get("streetName", "") + " " + str(item.get("address", {}).get("streetNumber", ""))
@@ -63,9 +74,8 @@ def check_site():
     previous_lines = get_previous_lines()
 
     logging.info(f"📦 Fundet {len(current_lines)} boliger.")
-    
-    # 🔧 Midlertidig test: Tving besked uanset ændringer
-    force_send = True
+
+    force_send = True  # ← slå fra bagefter
 
     if current_lines != previous_lines and previous_lines or force_send:
         diff = list(difflib.unified_diff(previous_lines, current_lines, lineterm=''))
@@ -86,3 +96,4 @@ def check_site():
     save_current_lines(current_lines)
 
 check_site()
+
