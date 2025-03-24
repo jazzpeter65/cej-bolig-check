@@ -4,14 +4,14 @@ import smtplib
 from email.mime.text import MIMEText
 import os
 
-print("Starter CEJ bolig-tjek...")
+print("Starter CEJ bolig-tjek...", flush=True)
 
 FROM_EMAIL = os.environ.get("FROM_EMAIL")
 FROM_PASSWORD = os.environ.get("FROM_PASSWORD")
 TO_EMAIL = os.environ.get("TO_EMAIL")
 
 if not FROM_EMAIL or not FROM_PASSWORD or not TO_EMAIL:
-    print("❌ En eller flere environment-variabler mangler!")
+    print("❌ En eller flere environment-variabler mangler!", flush=True)
     exit(1)
 
 URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-8000&p=sj%C3%A6lland%2Ck%C3%B8benhavn&types=apartment"
@@ -29,7 +29,7 @@ def save_current(content):
         f.write(content)
 
 def send_sms(message_body):
-    print("🔔 Sender SMS...")
+    print("🔔 Sender SMS...", flush=True)
     msg = MIMEText(message_body)
     msg["Subject"] = "Ny CEJ-lejlighed!"
     msg["From"] = FROM_EMAIL
@@ -38,10 +38,10 @@ def send_sms(message_body):
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
         server.login(FROM_EMAIL, FROM_PASSWORD)
         server.send_message(msg)
-    print("✅ SMS sendt!")
+    print("✅ SMS sendt!", flush=True)
 
 def check_site():
-    print("🔍 Tjekker CEJ-siden...")
+    print("🔍 Tjekker CEJ-siden...", flush=True)
     response = requests.get(URL)
     soup = BeautifulSoup(response.text, "html.parser")
 
@@ -49,12 +49,12 @@ def check_site():
     current = "\n".join([item.get_text(strip=True) for item in listings])
     previous = get_previous()
 
-    print(f"📦 Fundet {len(listings)} opslag.")
+    print(f"📦 Fundet {len(listings)} opslag.", flush=True)
     if current != previous and previous != "":
-        print("🚨 Ændring fundet – sender SMS!")
+        print("🚨 Ændring fundet – sender SMS!", flush=True)
         send_sms("Ny bolig under 8000 kr – tjek CEJ nu!")
     else:
-        print("✅ Ingen ændringer.")
+        print("✅ Ingen ændringer.", flush=True)
     save_current(current)
 
 check_site()
