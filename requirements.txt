@@ -1,5 +1,5 @@
 requests
 requests-html
 lxml
-lxml-html-clean
+lxml_html_clean
 pyppeteer
