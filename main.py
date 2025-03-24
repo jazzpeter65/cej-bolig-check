@@ -84,4 +84,3 @@ def check_site():
     save_current_lines(current_lines)
 
 check_site()
-
