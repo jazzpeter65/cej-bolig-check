@@ -18,7 +18,7 @@ if not FROM_EMAIL or not FROM_PASSWORD or not TO_EMAIL:
     logging.error("❌ En eller flere environment-variabler mangler!")
     exit(1)
 
-URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-8000&p=sj%C3%A6lland%2Ck%C3%B8benhavn&types=apartment"
+URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-50000&p=sj%C3%A6lland"
 PREVIOUS_FILE = "previous.txt"
 
 def get_previous_lines():
