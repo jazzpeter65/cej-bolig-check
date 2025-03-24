@@ -18,7 +18,8 @@ if not FROM_EMAIL or not FROM_PASSWORD or not TO_EMAIL:
     logging.error("❌ En eller flere environment-variabler mangler!")
     exit(1)
 
-URL = "https://udlejning.cej.dk/find-bolig/overblik?collection=residences&monthlyPrice=0-8000&p=sj%C3%A6lland%2Ck%C3%B8benhavn&types=apartment"
+# 🔄 Henter alle boliger – uden filtre
+URL = "https://udlejning.cej.dk/find-bolig/overblik"
 PREVIOUS_FILE = "previous.txt"
 
 def get_previous_lines():
@@ -35,7 +36,7 @@ def save_current_lines(lines):
 def send_sms(message_body):
     logging.info("🔔 Sender besked...")
     msg = MIMEText(message_body)
-    msg["Subject"] = "Ny CEJ-lejlighed(er)!"
+    msg["Subject"] = "Ændringer på CEJ.dk"
     msg["From"] = FROM_EMAIL
     msg["To"] = TO_EMAIL
 
