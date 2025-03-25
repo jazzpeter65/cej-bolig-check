@@ -2,7 +2,7 @@ name: CEJ bolig tjekker
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'  # Kør hvert 5. minut
   workflow_dispatch:
 
 jobs:
@@ -27,4 +27,5 @@ jobs:
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
           FROM_PASSWORD: ${{ secrets.FROM_PASSWORD }}
           TO_EMAIL: ${{ secrets.TO_EMAIL }}
-        run: python main.py
+        run: |
+          python main.py
