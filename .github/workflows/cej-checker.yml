@@ -2,8 +2,8 @@ name: CEJ bolig tjekker
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Kører hvert 5. minut
-  workflow_dispatch:        # Kan også startes manuelt
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
 
 jobs:
   run-script:
