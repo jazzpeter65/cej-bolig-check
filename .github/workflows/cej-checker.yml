@@ -2,7 +2,7 @@ name: CEJ bolig tjekker
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # Kør hvert 5. minut
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 jobs:
