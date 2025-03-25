@@ -9,23 +9,23 @@ jobs:
   run-script:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v2
+      - name: Checkout repo
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Install dependencies
-      run: |
-        pip install -r requirements.txt
-        pip install lxml_html_clean
+      - name: Install requirements.txt
+        run: pip install -r requirements.txt
 
-    - name: Run script
-      env:
-        FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
-        FROM_PASSWORD: ${{ secrets.FROM_PASSWORD }}
-        TO_EMAIL: ${{ secrets.TO_EMAIL }}
-      run: |
-        python main.py
+      - name: Install lxml_html_clean
+        run: pip install lxml_html_clean
+
+      - name: Run script
+        env:
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+          FROM_PASSWORD: ${{ secrets.FROM_PASSWORD }}
+          TO_EMAIL: ${{ secrets.TO_EMAIL }}
+        run: python main.py
