@@ -1,5 +1,2 @@
-requests
-requests-html
-lxml
-lxml_html_clean
-pyppeteer
+playwright
+beautifulsoup4
